@@ -1,23 +1,42 @@
+use crate::components::form::Form;
+use crate::state::{Action, State};
+use gloo::storage::{LocalStorage, Storage};
+use std::collections::HashMap;
 use yew::prelude::*;
 
-pub struct Home;
-impl Component for Home {
-    type Message = ();
-    type Properties = ();
+const KEY: &str = "crdt.client.example";
 
-    fn create(_ctx: &Context<Self>) -> Self {
-        Self
-    }
+#[function_component(Home)]
+pub fn home() -> Html {
+    let state = use_reducer(|| State {
+        hash_map: LocalStorage::get(KEY).unwrap_or_else(|_| HashMap::new()),
+    });
 
-    fn view(&self, _ctx: &Context<Self>) -> Html {
-        html! {
-            <div class="tile is-ancestor is-vertical">
-                <div class="tile is-child">
-                    <figure class="image is-3by1">
-                        <img alt="A random image for the input term 'yew'." src="https://source.unsplash.com/random/1200x400/?yew" />
-                    </figure>
+    use_effect_with_deps(
+        move |state| {
+            LocalStorage::set(KEY, &state.clone().hash_map).expect("failed to set");
+            || ()
+        },
+        state.clone(),
+    );
+
+    let onadd = {
+        let state = state.clone();
+        Callback::from(move |(key, value): (String, String)| {
+            state.dispatch(Action::Edit(key, value));
+        })
+    };
+
+    html! {
+        <div class="container">
+            <div class="card">
+                <div class="card-content">
+                    <div class="content">
+                        {  format!("{:?}", state.hash_map) }
+                        <Form {onadd} inputs={state.hash_map.clone()} />
+                    </div>
                 </div>
             </div>
-        }
+        </div>
     }
 }

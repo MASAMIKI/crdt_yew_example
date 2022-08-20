@@ -1,9 +1,15 @@
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+mod components;
+
+mod hooks;
+
 mod pages;
 use pages::home::Home;
 use pages::page_not_found::PageNotFound;
+
+mod state;
 
 #[derive(Routable, PartialEq, Clone, Debug)]
 pub enum Route {
@@ -33,9 +39,11 @@ impl Component for App {
         html! {
             <BrowserRouter>
                 { self.view_nav() }
-                <main>
-                    <Switch<Route> render={Switch::render(switch)} />
-                </main>
+                <section>
+                    <div class="container my-6">
+                        <Switch<Route> render={Switch::render(switch)} />
+                    </div>
+                </section>
                 { self.view_footer() }
             </BrowserRouter>
         }
