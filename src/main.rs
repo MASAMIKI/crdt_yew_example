@@ -9,9 +9,12 @@ use axum::{
     routing::get,
     Router,
 };
-use std::net::SocketAddr;
+use std::net::{Ipv4Addr, SocketAddr};
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
+
+const IP: [u8; 4] = [127, 0, 0, 1];
+const PORT: u16 = 3000;
 
 #[tokio::main]
 async fn main() {
@@ -28,7 +31,7 @@ async fn main() {
         .fallback(fallback.into_service())
         .layer(trace_layer);
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from((Ipv4Addr::from(IP), PORT));
     tracing::debug!("listening on {}", addr);
 
     axum::Server::bind(&addr)
