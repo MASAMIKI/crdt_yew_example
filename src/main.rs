@@ -3,13 +3,13 @@ use yew_router::prelude::*;
 
 mod components;
 
-mod hooks;
-
 mod pages;
 use pages::home::Home;
 use pages::page_not_found::PageNotFound;
 
 mod state;
+
+mod crdt_websocket;
 
 #[derive(Routable, PartialEq, Clone, Debug)]
 pub enum Route {
@@ -75,10 +75,10 @@ impl App {
 fn switch(routes: &Route) -> Html {
     match routes {
         Route::Home => {
-            html! { <Home /> }
+            html! { <Home  /> }
         }
         Route::NotFound => {
-            html! { <PageNotFound /> }
+            html! { <PageNotFound />}
         }
     }
 }

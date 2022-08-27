@@ -6,34 +6,31 @@ use yew::{classes, function_component, html, Callback, Properties, TargetCast};
 
 #[derive(PartialEq, Properties, Clone)]
 pub struct InputsProps {
-    pub onadd: Callback<(String, String)>,
+    pub on_change: Callback<(String, String)>,
     pub inputs: HashMap<String, String>,
 }
 
 #[function_component(Form)]
 pub fn form(props: &InputsProps) -> Html {
     let generate_onkeyup = |key: &str| {
-        let onadd = props.onadd.clone();
+        let on_change = props.on_change.clone();
         let key_string = key.to_string();
 
         move |e: KeyboardEvent| {
             let input: HtmlInputElement = e.target_unchecked_into();
             let value = input.value();
-            onadd.emit((key_string.clone(), value));
+            on_change.emit((key_string.clone(), value));
         }
     };
 
     let generate_onselect = |key: &str| {
-        log::info!("{}", key);
-        let onadd = props.onadd.clone();
+        let on_change = props.on_change.clone();
         let key_string = key.to_string();
 
         move |e: Event| {
             let input: HtmlInputElement = e.target_unchecked_into();
             let value = input.value();
-            log::info!("{:#?}", value);
-            log::info!("{:#?}", e.value_of());
-            onadd.emit((key_string.clone(), value));
+            on_change.emit((key_string.clone(), value));
         }
     };
 
