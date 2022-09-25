@@ -1,6 +1,8 @@
 use axum::{
+    extract::Extension,
     handler::Handler,
     http::{StatusCode, Uri},
+    response::{IntoResponse, Json},
     routing::get,
     Router,
 };
@@ -12,6 +14,8 @@ const IP: [u8; 4] = [127, 0, 0, 1];
 const PORT: u16 = 3000;
 
 mod handler;
+mod layer;
+use crate::layer::crdt_data::CrdtState;
 
 #[tokio::main]
 async fn main() {
@@ -26,8 +30,10 @@ async fn main() {
     let app = Router::new()
         .route("/commit_crdt", get(handler::commit_crdt_data::handler))
         .route("/fetch_crdt", get(handler::fetch_crdt_data::handler))
-        .fallback(fallback.into_service())
-        .layer(trace_layer);
+        .route("/", get(index))
+        .layer(trace_layer)
+        .layer(Extension(CrdtState::default()))
+        .fallback(fallback.into_service());
 
     let addr = SocketAddr::from((Ipv4Addr::from(IP), PORT));
     tracing::debug!("listening on {}", addr);
@@ -38,6 +44,10 @@ async fn main() {
         .unwrap();
 }
 
-async fn fallback(uri: Uri) -> (StatusCode, String) {
+async fn index(Extension(crdt_state): Extension<CrdtState>) -> impl IntoResponse {
+    Json(crdt_state.read().unwrap().db.clone())
+}
+
+async fn fallback(uri: Uri) -> impl IntoResponse {
     (StatusCode::NOT_FOUND, format!("No route for {}", uri))
 }
