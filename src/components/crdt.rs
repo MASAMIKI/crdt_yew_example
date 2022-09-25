@@ -45,7 +45,6 @@ pub fn crdt() -> Html {
         <div class="card">
             <div class="card-content">
                 <div class="content">
-                    {  format!("{:?}", state.hash_map) }
                     <Form {on_change} inputs={state.hash_map.clone()} />
                 </div>
             </div>
