@@ -1,0 +1,9 @@
+/server/target
+/server/dist
+tmp/*
+!.gitkeep
+
+/client/target
+/client/dist
+
+.idea
