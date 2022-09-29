@@ -5,6 +5,8 @@ use axum::{
     },
     response::IntoResponse,
 };
+use serde_cbor::from_slice;
+use std::collections::HashMap;
 
 use crate::CrdtState;
 
@@ -27,16 +29,17 @@ pub async fn handle_socket(mut socket: WebSocket, crdt_state: CrdtState) {
                 match msg {
                     Message::Text(t) => {
                         println!("client sent str: {:?}", t);
-                        crdt_state.write().unwrap().db.insert("mana".to_string(), t);
-                        let state_text =
-                            serde_json::to_string(&crdt_state.read().unwrap().db).unwrap();
-                        if socket.send(Message::Text(state_text)).await.is_err() {
-                            println!("client disconnected");
-                            return;
-                        }
                     }
-                    Message::Binary(_) => {
-                        println!("client sent binary data");
+                    Message::Binary(b) => {
+                        let hash_map: HashMap<String, String> = from_slice(&b).unwrap();
+                        for (key, value) in &hash_map {
+                            crdt_state
+                                .write()
+                                .unwrap()
+                                .db
+                                .insert(key.to_string(), value.to_string());
+                        }
+                        println!("client sent binary data: {:?}", hash_map);
                     }
                     Message::Ping(_) => {
                         println!("socket ping");
