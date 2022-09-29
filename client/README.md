@@ -5,4 +5,3 @@
 ```commandline
 trunk serve 
 ```
-# crdt_yew_example
