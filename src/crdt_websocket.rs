@@ -8,13 +8,8 @@ pub struct CrdtWebSockets {
 }
 
 impl CrdtWebSockets {
-    pub fn new<T: AsRef<str>>(protocol: T, ip: [u8; 4], port: u16) -> CrdtWebSockets {
-        let url = format!(
-            "{}://{}:{}/",
-            protocol.as_ref(),
-            ip.map(|i| i.to_string()).join("."),
-            port
-        );
+    pub fn new<T: AsRef<str>, S: AsRef<str>>(protocol: T, domain: S, port: u16) -> CrdtWebSockets {
+        let url = format!("{}://{}:{}/", protocol.as_ref(), domain.as_ref(), port);
         let commit_crdt_url = url.clone() + "commit_crdt";
         let fetch_crdt_url = url + "fetch_crdt";
         let cs = default_socket(commit_crdt_url);
