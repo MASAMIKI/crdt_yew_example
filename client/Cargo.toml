@@ -1,5 +1,5 @@
 [package]
-name = "crde_client_example"
+name = "crdt_client_example"
 version = "0.1.0"
 edition = "2021"
 
