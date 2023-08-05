@@ -3,11 +3,12 @@ use std::collections::HashMap;
 use web_sys::{Event, HtmlInputElement};
 use yew::events::KeyboardEvent;
 use yew::{classes, function_component, html, Callback, Properties, TargetCast};
+use crdts::{CmRDT, CvRDT, Map, Orswot};
 
 #[derive(PartialEq, Properties, Clone)]
 pub struct InputsProps {
     pub on_change: Callback<(String, String)>,
-    pub inputs: HashMap<String, String>,
+    pub inputs: Map<String, Orswot<String, String>, String>,
 }
 
 #[function_component(Form)]
@@ -37,11 +38,9 @@ pub fn form(props: &InputsProps) -> Html {
     let default_value = "".to_string();
     let input_value = |key: &str| {
         let input_key = key.to_string();
-        props
-            .inputs
-            .get(&input_key)
-            .unwrap_or(&default_value)
-            .clone()
+        let read_ctx = props.inputs.get(key);
+        let values = read_ctx.val.map(|set| set.read().val).map(|hashmap| hashmap.into_iter().collect::<Vec<_>>());
+        values.unwrap_or_else(vec![])[0]
     };
 
     let subject_options = vec![

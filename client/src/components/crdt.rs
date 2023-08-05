@@ -4,13 +4,15 @@ use crate::state::{Action, State};
 
 use gloo::storage::{LocalStorage, Storage};
 use serde_cbor::from_slice;
-use std::collections::HashMap;
 use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
 use web_sys::MessageEvent;
 use yew::prelude::{function_component, html, use_effect_with_deps, use_reducer, Callback};
 use yew::use_context;
+use crdts::{CmRDT, CvRDT, Map, Orswot};
+use uuid::Uuid;
 
-const KEY: &str = "crdt.client.example";
+const CRDT_KEY: &str = "crdt.client.example";
+const USER_ID_KEY: &str  =  "crdt.user";
 
 #[function_component(Crdt)]
 pub fn crdt() -> Html {
@@ -19,12 +21,15 @@ pub fn crdt() -> Html {
     let fetch_socket = ws.fetch_socket;
 
     let state = use_reducer(|| State {
-        hash_map: LocalStorage::get(KEY).unwrap_or_else(|_| HashMap::new()),
+        crdt_map: LocalStorage::get(CRDT_KEY).unwrap_or_else(|_| Map::new()),
     });
+
+    let userId: String = LocalStorage::get(USER_ID_KEY).unwrap_or_else(|_| Uuid::new_v4().to_string());
+    LocalStorage::set(USER_ID_KEY, userId).expect("failed to set user id");
 
     use_effect_with_deps(
         move |state| {
-            LocalStorage::set(KEY, &state.clone().hash_map).expect("failed to set");
+            LocalStorage::set(CRDT_KEY, &state.clone().crdt_map).expect("failed to set data");
             || ()
         },
         state.clone(),
@@ -34,7 +39,7 @@ pub fn crdt() -> Html {
     let on_change = {
         let state = state_to_commit;
         Callback::from(move |(key, value): (String, String)| {
-            state.dispatch(Action::Edit(commit_socket.clone(), key, value));
+            state.dispatch(Action::Edit(commit_socket.clone(), key, value, userId.to_string()));
         })
     };
 
@@ -45,10 +50,11 @@ pub fn crdt() -> Html {
         let array_buffer = response.array_buffer().unwrap();
 
         let state = state_to_fetch.clone();
+        let userId_clone = userId.clone();
         let callback = Closure::<dyn FnMut(_)>::new(move |ab: JsValue| {
             let ua = js_sys::Uint8Array::new(&ab);
-            let hash_map: HashMap<String, String> = from_slice(&ua.to_vec()).unwrap();
-            state.dispatch(Action::Bulk(hash_map));
+            let hash_map: Map<String, Orswot<String, String>, String> = from_slice(&ua.to_vec()).unwrap();
+            state.dispatch(Action::Bulk(hash_map, userId_clone.clone()));
         });
         array_buffer.then(&callback);
         callback.forget();
@@ -60,7 +66,7 @@ pub fn crdt() -> Html {
         <div class="card">
             <div class="card-content">
                 <div class="content">
-                    <Form {on_change} inputs={state.hash_map.clone()} />
+                    <Form {on_change} inputs={state.crdt_map.clone()} />
                 </div>
             </div>
         </div>
